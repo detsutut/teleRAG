@@ -1,7 +1,19 @@
+# Project-specific files to ignore
+# Data and Models should not be shared by default
+#data
+#models
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Pycharm
+.idea
+
+# Wandb
+wandb
 
 # C extensions
 *.so
