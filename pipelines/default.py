@@ -1,4 +1,8 @@
-from scripts.embeddings import SentenceEmbedder
+import os
+
+from scripts.embedder.embeddings import SentenceEmbedder
+
+os.chdir("/home/tommaso/Repositories/teleRAG/")
 
 def main():
     sentences = ["Questo è un esempio di frase", "Questo è un ulteriore esempio"]

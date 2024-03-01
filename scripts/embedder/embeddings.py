@@ -3,7 +3,7 @@ import torch
 import os
 from sentence_transformers import SentenceTransformer
 
-os.chdir("/home/tommaso/Repositories/spawn-nlp/")
+os.chdir("//")
 
 
 class SentenceEmbedder:

@@ -1,7 +1,8 @@
 # Project-specific files to ignore
 # Data and Models should not be shared by default
 #data
-#models
+models
+bot/API_token
 
 
 # Byte-compiled / optimized / DLL files
