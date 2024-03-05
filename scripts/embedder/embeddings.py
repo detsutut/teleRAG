@@ -1,3 +1,4 @@
+from torch import Tensor
 from transformers import AutoTokenizer, AutoModel
 import torch
 import os
@@ -7,11 +8,24 @@ os.chdir("//")
 
 
 class SentenceEmbedder:
-    def __init__(self, model_path):
+    def __init__(self, model_path='paraphrase-MiniLM-L6-v2', semantic_threshold=0.5):
         self.model = SentenceTransformer(model_path, cache_folder="./models/cache")
+        self.threshold = semantic_threshold
 
     def encode(self, sentences):
         return self.model.encode(sentences)
+
+    def semantic_search(self, target, references):
+        similarities = self.__cosine_similarity__(torch.tensor(target), torch.tensor(references))
+        val, ind = torch.max(similarities, dim=-1)
+        if ind >= self.threshold:
+            return int(ind)
+        else:
+            return None
+
+    def __cosine_similarity__(self, x1: torch.Tensor, x2: torch.Tensor) -> Tensor:
+        return torch.nn.functional.cosine_similarity(x1, x2, dim=-1)
+
 
 #### TEST ####
 # Sentence Embedder without the sentence_transformers dependecy

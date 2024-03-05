@@ -5,15 +5,13 @@ import numpy as np
 
 os.chdir("/home/tommaso/Repositories/teleRAG")
 
-
 class LLM:
-    def __init__(self, device="cuda:0"):
+    def __init__(self, pt_checkpoint ="mistralai/Mistral-7B-Instruct-v0.2", device="cuda:0"):
         # Pointless to run on CPU, check if GPU is available otherwise refuse
         if not torch.cuda.is_available():
             raise Exception("No GPU detected. Please make sure your hardware matches LLM requirements before running this script.")
-        self.tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct-v0.1",
-                                                       cache_dir="./models/cache")
-        self.model = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-Instruct-v0.1",
+        self.tokenizer = AutoTokenizer.from_pretrained(pt_checkpoint, cache_dir="./models/cache")
+        self.model = AutoModelForCausalLM.from_pretrained(pt_checkpoint,
                                                           load_in_8bit=True,
                                                           device_map=device,
                                                           cache_dir="./models/cache")
