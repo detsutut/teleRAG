@@ -1,4 +1,5 @@
 import logging
+import sqlite3
 
 from telegram import Update
 from telegram.ext import filters, ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler
@@ -15,27 +16,36 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-chats = {"DEFAULT": [
-    {"role": "user",
-     "content": "Your name is RagBot. You are a friendly chatbot that answers questions. Keep the answer short and concise. Don't be verbose."},
-    {"role": "assistant", "content": "Got it! How can I assist you today?"}
-]}
-
 
 def put_chat(user_id, chat_updated):
-    global chats
-    chats[user_id] = chat_updated
+    conn = sqlite3.connect('data/chats.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute("INSERT OR REPLACE INTO history (id, template) VALUES (?, ?);", (user_id, str(chat_updated)))
+        conn.commit()
+    except sqlite3.Error as e:
+        logging.error(e)
+    finally:
+        conn.close()
 
 
 def get_chat(user_id):
-    global chats
-    chat = chats.get(user_id)
-    if chat is None:
-        logging.warning("Chat with user {} not found. Creating a new one.".format(user_id))
-        put_chat(user_id, chats["DEFAULT"])
-        return chats["DEFAULT"]
-    else:
-        return chat
+    conn = sqlite3.connect('data/chats.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT template FROM history WHERE id = ?;", (user_id,))
+        result = cursor.fetchone()
+        if result:
+            return eval(result[0])
+        else:
+            logging.warning("Chat with user {} not found. Creating a new one.".format(user_id))
+            default_template = get_chat("DEFAULT")
+            put_chat(user_id, default_template)
+            return default_template
+    except sqlite3.Error as e:
+        logging.error(e)
+    finally:
+        conn.close()
 
 
 def loadAPItoken(path='bot/API_token'):
@@ -51,16 +61,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def restart(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global chats
     chat_id = update.effective_chat.id
-    put_chat(chat_id, chats["DEFAULT"])
+    put_chat(chat_id, get_chat("DEFAULT"))
     await context.bot.send_message(chat_id=chat_id, text="Memory wiped out! Meow! How can I assist you today?")
 
 
 async def config(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global llm, chats
+    global llm
     chat_id = update.effective_chat.id
-    details = "\n\n".join([str(llm.gen_config), str(chats)])
+    details = "Config:"+str(llm.gen_config)+"\nConversation History:"+str(get_chat(chat_id))+"\n"
     if check_length(details):
         chunks = split_text(details)
         for chunk in chunks:
@@ -75,7 +84,7 @@ def check_length(text: str, max_length: int = 4096):
 def split_text(text: str, max_length: int = 4089):
     chunks = []
     for x in range(0, len(text), max_length):
-        chunks.append(text[x:x + max_length]+" ["+str(int(1+x/max_length))+"/"+str(int(1+len(text)/max_length))+"]")
+        chunks.append(text[x:x + max_length] + " [" + str(int(1 + x / max_length)) + "/" + str(int(1 + len(text) / max_length)) + "]")
     return chunks
 
 

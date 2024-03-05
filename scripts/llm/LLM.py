@@ -19,11 +19,11 @@ class LLM:
                                                           cache_dir="./models/cache")
         self.gen_config = GenerationConfig(
             do_sample=True,
-            temperature=0.7,
-            repetition_penalty=1.2,
-            top_k=50,
-            top_p=0.95,
-            max_new_tokens=200,
+            temperature=0.2,
+            repetition_penalty=1.3,
+            top_k=20,
+            top_p=1,
+            max_new_tokens=100,
             pad_token_id=self.tokenizer.eos_token_id,
             eos_token_id=self.tokenizer.convert_tokens_to_ids("<|im_end|>"),
             skip_prompt=True,
@@ -41,11 +41,11 @@ class LLM:
     def reply(self, user_message: str, chat_template = [], min_confidence=0):
         chat_template.append({"role": "user", "content": user_message})
         if min_confidence > 0:
-            answer = self._generate_(chat_template=self.chat_template, confidence=True)
+            answer = self._generate_(chat_template=chat_template, confidence=True)
             if answer["confidence"] < min_confidence:
                 answer["text"] = "Purry, I don't understand."
         else:
-            answer = self._generate_(chat_template=self.chat_template, confidence=False)
+            answer = self._generate_(chat_template=chat_template, confidence=False)
         chat_template.append({"role": "assistant", "content": answer["text"]})
         return {"text": "\n".join([answer["text"], str(np.random.choice(["Meow!", "Purr!", "Mew!", "Chirrup!", "Chirp!"], size=1)[0])]),
                 "chat_template": chat_template}
