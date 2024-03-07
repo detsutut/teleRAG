@@ -3,7 +3,7 @@
 #data
 models
 bot/API_token
-data
+data/chats.db
 
 
 # Byte-compiled / optimized / DLL files
