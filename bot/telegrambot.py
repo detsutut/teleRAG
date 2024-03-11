@@ -2,13 +2,15 @@ import logging
 import os
 import sys
 
+sys.path.append("/home/tommaso/Repositories/teleRAG/")
+
 from bot.botutils import check_length, split_text, load_api_token
-from bot.sqlutils import retrieve_actions, get_chat, put_chat
+from bot.sqlutils import retrieve_actions, get_chat, put_chat, update_session, get_all_chat_ids
 from scripts.embedder.embeddings import SentenceEmbedder
 from scripts.llm.LLM import LLM
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import filters, ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler
+from telegram.ext import filters, Application, ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler
 
 os.chdir("/home/tommaso/Repositories/teleRAG/")
 
@@ -26,6 +28,8 @@ class TelegramBot:
         self.MAX_LEN = 4096  # characters
         self.API_TOKEN = load_api_token(api_token_path)
         self.ACTIONS_THRESHOLD = 0.6
+        self.ONSTART_MSG = "Back online! Let meow know if you need assistance 🐱"
+        self.ONSTOP_MSG = "Meowtenance time! Need to recharge and get my fur fluffed. Sweet dreams, humans! I'll be back online soon. Meanwhile, I will just ignore you 🐱"
 
     def increase_decrease_menu(self, action_id: str):
         keyboard = [
@@ -97,9 +101,23 @@ class TelegramBot:
         put_chat(str(chat_id), answer["chat_template"])
         return answer["text"]
 
+    async def post_stop(self, application: Application) -> None:
+        logging.info(f"broadcasting message...")
+        chat_ids = get_all_chat_ids(recent=True)
+        for chat_id in chat_ids:
+            await application.bot.send_message(chat_id=chat_id, text=self.ONSTOP_MSG)
+
+    async def post_init(self, application: Application) -> None:
+        logging.info(f"broadcasting message...")
+        chat_ids = get_all_chat_ids(recent=True)
+        for chat_id in chat_ids:
+            await application.bot.send_message(chat_id=chat_id, text=self.ONSTART_MSG)
+
+
     async def reply(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.effective_chat.id
         logging.info(f"incoming message from {chat_id}")
+        update_session(str(chat_id), "TEST001")
         await context.bot.send_chat_action(chat_id=chat_id, action='typing')
         # Check in the vector db if the message is semantically similar to one of the scripted actions
         action = self.vector_db_search(update.message.text)
@@ -112,7 +130,7 @@ class TelegramBot:
             await context.bot.send_message(chat_id=chat_id, text=answer)
 
     def run(self):
-        application = ApplicationBuilder().token(self.API_TOKEN).build()
+        application = ApplicationBuilder().token(self.API_TOKEN).post_init(self.post_init).post_stop(self.post_stop).build()
         handlers = [CommandHandler("start", self.start),
                     CommandHandler('restart', self.restart),
                     CommandHandler('config', self.config),
