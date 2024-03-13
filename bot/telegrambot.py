@@ -200,7 +200,9 @@ class TelegramBot:
         if value >= self.ACTIONS_THRESHOLD:
             action = self.actions.iloc[index]
             logging.info(f"Action Triggered! Name: {action['name']}, Id: {action['id']}, Similarity: {round(value, 2)}")
-            return action
+            return {"name": action["name"],
+                    "id": action["id"],
+                    "similarity": value}
         else:
             return None
 
@@ -249,8 +251,11 @@ class TelegramBot:
         """
         logging.info(f"broadcasting message...")
         chat_ids = get_all_chat_ids(recent=recent)
-        for chat_id in chat_ids:
-            await application.bot.send_message(chat_id=chat_id, text=self.ONSTOP_MSG)
+        if len(chat_ids) > 0:
+            for chat_id in chat_ids:
+                await application.bot.send_message(chat_id=chat_id, text=self.ONSTOP_MSG)
+        else:
+            logging.info(f"no chats found")
 
     async def post_init(self, application: Application, recent=True) -> None:
         """Callback called when the bot starts.
@@ -272,8 +277,12 @@ class TelegramBot:
         """
         logging.info(f"broadcasting message...")
         chat_ids = get_all_chat_ids(recent=recent)
-        for chat_id in chat_ids:
-            await application.bot.send_message(chat_id=chat_id, text=self.ONSTART_MSG)
+        if len(chat_ids) > 0:
+            for chat_id in chat_ids:
+                await application.bot.send_message(chat_id=chat_id, text=self.ONSTART_MSG)
+                logging.info(f"broadcast message sent")
+        else:
+            logging.info(f"no chats found")
 
     async def reply(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Callback called when there is a new incoming message.
@@ -304,7 +313,7 @@ class TelegramBot:
         # Check in the vector db if the message is semantically similar to one of the scripted actions
         action = self.vector_db_search(update.message.text)
         # If so, trigger action and don't update chat history
-        if action:
+        if action is not None:
             await update.message.reply_text(f"{action['name']}", reply_markup=self.increase_decrease_menu(action_id=str(action['id'])))
         # Otherwise, use LLM to generate answer and update chat history
         else:
