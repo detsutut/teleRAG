@@ -1,5 +1,7 @@
 # TelegramBot
 
+![image](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)
+
 A Python Telegram bot powered with LLM and RAG for interactive messaging and conversation management.
 
 ## Overview
@@ -8,8 +10,8 @@ This Telegram bot utilizes natural language processing (NLP) techniques to provi
 
 ## Features
 
-- **Interactive Messaging**: Realistic conversation through LLM powered answers.
-- **Semantic Search**: RAG with semantic search is used to trigger specific routines, commands, actions. 
+- **Interactive Messaging**: Realistic conversation through LLM-powered answers.
+- **Semantic Search**: RAG with semantic search is used to trigger specific routines, commands, and actions. 
 - **Conversation History**: Maintains conversation history to generate context-and-history-aware responses.
 - **Broadcast Messages**: Notify users with broadcast messages upon bot start and stop events.
 
@@ -63,7 +65,7 @@ This Telegram bot utilizes natural language processing (NLP) techniques to provi
 
 ## Contributors
 
--  **Repository maintainer**: Tommaso M. Buonocore  [![LinkedIn][linkedin-shield]][linkedin-url]  
+-  Tommaso M. Buonocore  [![image](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/tbuonocore/)  
 
 ## License
 
